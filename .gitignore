@@ -1,4 +1,5 @@
 .worktrees/
+.playwright-cli/
 node_modules/
 dist/
 coverage/

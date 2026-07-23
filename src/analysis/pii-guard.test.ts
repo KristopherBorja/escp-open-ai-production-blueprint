@@ -25,6 +25,14 @@ describe("inspectPii", () => {
       },
     ]);
   });
+
+  it("keeps multiple findings of the same kind in source order", () => {
+    expect(
+      inspectPii("First ada@example.com, then grace@example.org.").map(
+        (finding) => finding.value,
+      ),
+    ).toEqual(["ada@example.com", "grace@example.org"]);
+  });
 });
 
 describe("redactPii", () => {

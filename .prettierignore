@@ -1,5 +1,6 @@
 coverage/
 dist/
+.playwright-cli/
 docs/superpowers/
 node_modules/
 package-lock.json
