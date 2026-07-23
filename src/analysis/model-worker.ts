@@ -13,6 +13,10 @@ let activeBackend: AnalysisBackend = "wasm";
 
 env.allowLocalModels = false;
 env.useBrowserCache = true;
+// Transformers.js 4.2 performs registry metadata probes before forwarding the
+// pipeline revision. Pin the worker-wide remote path so those probes cannot
+// observe a moving branch either.
+env.remotePathTemplate = `{model}/resolve/${manifest.revision}/`;
 
 function send(message: WorkerResponse): void {
   self.postMessage(message);
