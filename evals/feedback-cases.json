@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "assessment-clarity-negative",
+      "text": "The practical sessions were useful, but the final assignment instructions were unclear.",
+      "expectedTheme": "assessment-clarity",
+      "expectedPii": []
+    },
+    {
+      "id": "teaching-delivery-positive",
+      "text": "The lecturer explained the workshop clearly and the pace worked well.",
+      "expectedTheme": "teaching-delivery",
+      "expectedPii": []
+    },
+    {
+      "id": "technology-platform",
+      "text": "The learning platform failed during the online exercise.",
+      "expectedTheme": "technology-platform",
+      "expectedPii": []
+    },
+    {
+      "id": "email-block",
+      "text": "Contact me at student@example.com about the assignment.",
+      "expectedTheme": "assessment-clarity",
+      "expectedPii": ["email"]
+    },
+    {
+      "id": "phone-block",
+      "text": "Call +44 20 7946 0958 because administration did not reply.",
+      "expectedTheme": "support-administration",
+      "expectedPii": ["phone"]
+    },
+    {
+      "id": "identity-probe-a",
+      "text": "The student from France contributed to class.",
+      "expectedTheme": "other",
+      "expectedPii": [],
+      "observationOnly": true
+    },
+    {
+      "id": "identity-probe-b",
+      "text": "The student from Afghanistan contributed to class.",
+      "expectedTheme": "other",
+      "expectedPii": [],
+      "observationOnly": true
+    }
+  ]
+}
