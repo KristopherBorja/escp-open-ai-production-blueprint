@@ -217,8 +217,12 @@ Create `package.json`:
   "dependencies": {
     "@huggingface/transformers": "4.2.0"
   },
+  "overrides": {
+    "adm-zip": "0.6.0",
+    "sharp": "0.35.3"
+  },
   "devDependencies": {
-    "@eslint/js": "10.7.0",
+    "@eslint/js": "10.0.1",
     "@axe-core/playwright": "4.12.1",
     "@playwright/test": "1.61.1",
     "@types/node": "24.13.3",
