@@ -130,8 +130,10 @@ flowchart LR
     Space --> Browser["Student browser"]
     Browser --> Guard["Input validation and<br/>local PII guard"]
     Guard --> Worker["Web Worker<br/>Transformers.js"]
+    Guard --> Theme["Transparent<br/>theme rules"]
     Worker --> Model["Pinned quantised<br/>DistilBERT model"]
-    Worker --> Result["Explained result"]
+    Model --> Result["Explained result"]
+    Theme --> Result
     Browser -. "feedback text never crosses this boundary" .-> Browser
 ```
 
@@ -142,10 +144,9 @@ flowchart LR
 3. The app validates the input length and characters locally.
 4. The PII guard detects common email and phone patterns locally.
 5. If PII is detected, analysis stops by default and the app offers local redaction.
-6. The worker runs sentiment inference locally.
-7. A deterministic theme classifier assigns one of a small documented set of themes.
-8. The UI renders a typed result with provenance, latency, and limitations.
-9. No feedback text, result, identifier, telemetry event, or history is sent to an application service.
+6. The worker runs sentiment inference locally while a deterministic classifier assigns one of a small documented set of themes.
+7. The UI combines both outputs into a typed result with provenance, latency, and limitations.
+8. No feedback text, result, identifier, telemetry event, or history is sent to an application service.
 
 The privacy notice must also state that the browser contacts Hugging Face to download application/model assets and therefore exposes normal network metadata such as IP address to the hosting platform. “Local inference” must not be presented as “no network activity.”
 
@@ -198,7 +199,7 @@ The request identifier exists only to correlate worker responses and is never pe
 
 ### `analysis-orchestrator`
 
-**Responsibility:** Enforce the order input policy → PII guard → model worker → theme rules → explained result.
+**Responsibility:** Enforce the order input policy → PII guard → local analysis → explained result. Local analysis combines the model worker and deterministic theme rules; neither receives unhandled PII.
 
 It must never fabricate or preserve a stale result after an error.
 
@@ -545,4 +546,3 @@ Implementation is complete only when:
 - Browser model conversion: <https://huggingface.co/Xenova/distilbert-base-uncased-finetuned-sst-2-english>
 - Upstream model card: <https://huggingface.co/distilbert/distilbert-base-uncased-finetuned-sst-2-english>
 - GitHub Actions billing: <https://docs.github.com/en/billing/concepts/product-billing/github-actions>
-
