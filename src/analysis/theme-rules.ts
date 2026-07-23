@@ -71,11 +71,19 @@ const RULES: readonly ThemeRule[] = [
   },
 ];
 
+function containsTerm(text: string, term: string): boolean {
+  const escaped = term.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+  const phrase = escaped.replace(/\s+/gu, "\\s+");
+  return new RegExp(`\\b${phrase}\\b`, "u").test(text);
+}
+
 export function classifyTheme(text: string): ThemePrediction {
   const normalised = text.toLocaleLowerCase("en");
 
   for (const rule of RULES) {
-    const evidence = rule.terms.filter((term) => normalised.includes(term));
+    const evidence = rule.terms.filter((term) =>
+      containsTerm(normalised, term),
+    );
     if (evidence.length > 0) {
       return { id: rule.id, label: rule.label, evidence };
     }

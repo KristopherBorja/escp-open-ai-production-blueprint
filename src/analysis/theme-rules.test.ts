@@ -6,7 +6,8 @@ import { classifyTheme } from "./theme-rules";
 interface EvaluationCase {
   readonly id: string;
   readonly text: string;
-  readonly expectedTheme: ThemeId;
+  readonly repeat?: number;
+  readonly expectedTheme?: ThemeId;
 }
 
 const fixture = JSON.parse(
@@ -16,8 +17,17 @@ const fixture = JSON.parse(
   ),
 ) as { readonly cases: readonly EvaluationCase[] };
 
+interface ThemeEvaluationCase extends EvaluationCase {
+  readonly expectedTheme: ThemeId;
+}
+
+const themeCases = fixture.cases.filter(
+  (evaluationCase): evaluationCase is ThemeEvaluationCase =>
+    evaluationCase.expectedTheme !== undefined,
+);
+
 describe("classifyTheme", () => {
-  it.each(fixture.cases)("$id", ({ text, expectedTheme }) => {
+  it.each(themeCases)("$id", ({ text, expectedTheme }) => {
     expect(classifyTheme(text).id).toBe(expectedTheme);
   });
 

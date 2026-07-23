@@ -22,8 +22,33 @@ const PATTERNS: readonly {
   },
 ];
 
+function overlaps(left: PiiFinding, right: PiiFinding): boolean {
+  return left.start < right.end && right.start < left.end;
+}
+
+function withoutOverlaps(
+  findings: readonly PiiFinding[],
+): readonly PiiFinding[] {
+  const byPriority = [...findings].sort((left, right) => {
+    if (left.kind !== right.kind) {
+      return left.kind === "email" ? -1 : 1;
+    }
+
+    return left.start - right.start;
+  });
+
+  const accepted: PiiFinding[] = [];
+  for (const finding of byPriority) {
+    if (!accepted.some((existing) => overlaps(existing, finding))) {
+      accepted.push(finding);
+    }
+  }
+
+  return accepted.sort((left, right) => left.start - right.start);
+}
+
 export function inspectPii(text: string): readonly PiiFinding[] {
-  return PATTERNS.flatMap(({ kind, pattern }) =>
+  const findings = PATTERNS.flatMap(({ kind, pattern }) =>
     [...text.matchAll(pattern)]
       .filter(
         (match) =>
@@ -35,14 +60,16 @@ export function inspectPii(text: string): readonly PiiFinding[] {
         end: match.index + match[0].length,
         value: match[0],
       })),
-  ).sort((left, right) => left.start - right.start);
+  );
+
+  return withoutOverlaps(findings);
 }
 
 export function redactPii(
   text: string,
   findings: readonly PiiFinding[],
 ): string {
-  return [...findings]
+  return [...withoutOverlaps(findings)]
     .sort((left, right) => right.start - left.start)
     .reduce(
       (redacted, finding) =>

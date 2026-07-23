@@ -14,6 +14,17 @@ describe("inspectPii", () => {
   it("does not treat an assignment number as a phone", () => {
     expect(inspectPii("Assignment 2026 was unclear.")).toEqual([]);
   });
+
+  it("does not duplicate numeric text inside an email as a phone", () => {
+    expect(inspectPii("Email 1234567@example.com.")).toEqual([
+      {
+        kind: "email",
+        start: 6,
+        end: 25,
+        value: "1234567@example.com",
+      },
+    ]);
+  });
 });
 
 describe("redactPii", () => {
@@ -27,5 +38,10 @@ describe("redactPii", () => {
     expect(redactPii(text, inspectPii(text))).toBe(
       "Email [email redacted] or call [phone redacted].",
     );
+  });
+
+  it("redacts a numeric email once without corrupting surrounding text", () => {
+    const text = "Email 1234567@example.com.";
+    expect(redactPii(text, inspectPii(text))).toBe("Email [email redacted].");
   });
 });

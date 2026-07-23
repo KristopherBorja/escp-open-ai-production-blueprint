@@ -5,12 +5,20 @@
       "id": "assessment-clarity-negative",
       "text": "The practical sessions were useful, but the final assignment instructions were unclear.",
       "expectedTheme": "assessment-clarity",
-      "expectedPii": []
+      "expectedPii": [],
+      "sentimentObservation": "negative"
     },
     {
       "id": "teaching-delivery-positive",
       "text": "The lecturer explained the workshop clearly and the pace worked well.",
       "expectedTheme": "teaching-delivery",
+      "expectedPii": [],
+      "sentimentObservation": "positive"
+    },
+    {
+      "id": "course-content",
+      "text": "The case study and reading material made the topic practical.",
+      "expectedTheme": "course-content",
       "expectedPii": []
     },
     {
@@ -30,6 +38,53 @@
       "text": "Call +44 20 7946 0958 because administration did not reply.",
       "expectedTheme": "support-administration",
       "expectedPii": ["phone"]
+    },
+    {
+      "id": "phone-parentheses",
+      "text": "Call (020) 7946 0958 about the office timetable.",
+      "expectedTheme": "support-administration",
+      "expectedPii": ["phone"]
+    },
+    {
+      "id": "phone-dots",
+      "text": "The support number 020.7946.0958 was unavailable.",
+      "expectedTheme": "support-administration",
+      "expectedPii": ["phone"]
+    },
+    {
+      "id": "numeric-email-overlap",
+      "text": "Email 1234567@example.com about the module.",
+      "expectedTheme": "course-content",
+      "expectedPii": ["email"]
+    },
+    {
+      "id": "mixed-wording",
+      "text": "The workshop was engaging, but the teaching pace was frustrating.",
+      "expectedTheme": "teaching-delivery",
+      "expectedPii": [],
+      "sentimentObservation": "mixed",
+      "observationOnly": true
+    },
+    {
+      "id": "negated-wording",
+      "text": "The assignment brief was not unclear and the grading was fair.",
+      "expectedTheme": "assessment-clarity",
+      "expectedPii": [],
+      "sentimentObservation": "negated",
+      "observationOnly": true
+    },
+    {
+      "id": "empty-input",
+      "text": "   ",
+      "expectedInputIssue": "empty",
+      "expectedPii": []
+    },
+    {
+      "id": "too-long-input",
+      "text": "x",
+      "repeat": 501,
+      "expectedInputIssue": "too-long",
+      "expectedPii": []
     },
     {
       "id": "identity-probe-a",
