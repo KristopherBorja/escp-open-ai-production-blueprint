@@ -10,16 +10,16 @@
 
 ## Threats, controls, and residual risk
 
-| Threat                                                     | Control in this blueprint                                                                                                            | Residual risk                                                                                          |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
-| Personal data entered accidentally                         | Synthetic-data notice, 500-character cap, common email/phone stop, local redaction                                                   | Pattern matching cannot prove anonymity or detect every identifier.                                    |
-| Feedback leaks to a server, URL, log, or analytics product | No application backend, storage, telemetry, or user-derived URL parameters; browser trace coverage                                   | Browser extensions, compromised devices, and upstream platform behaviour are outside this repository.  |
-| Model substitution or dependency compromise                | Immutable package lock, immutable model revision, file sizes/hashes, live manifest verification, reviewed dependency updates         | A compromised trusted upstream or build platform remains possible.                                     |
-| Cross-site scripting                                       | User text is assigned with `textContent`; no user-derived HTML; restrictive container CSP                                            | Static Space headers are controlled by the hosting platform.                                           |
-| Worker crash or resource exhaustion                        | Input cap, isolated Worker, load/prediction timeouts, terminate/recreate recovery                                                    | First load is large and slow on constrained devices.                                                   |
-| Container privilege or server defaults                     | Multi-stage image, digest-pinned bases, user `101`, unprivileged port, tested headers and health route                               | A reviewed digest can still contain vulnerable software; production operators should scan and rebuild. |
-| Misleading certainty or automated overreach                | Confidence caveat, upstream bias warning, prohibited-use ledger, no action integration, blocked institutional gate                   | Users can still ignore visible warnings or copy results elsewhere.                                     |
-| Credential exposure in CI                                  | Read-only default permissions, immutable action commits, repository-owned deploy script, environment-scoped fine-grained Space token | Repository and platform administrators remain trusted.                                                 |
+| Threat                                                     | Control in this blueprint                                                                                                    | Residual risk                                                                                          |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Personal data entered accidentally                         | Synthetic-data notice, 500-character cap, common email/phone stop, local redaction                                           | Pattern matching cannot prove anonymity or detect every identifier.                                    |
+| Feedback leaks to a server, URL, log, or analytics product | No application backend, storage, telemetry, or user-derived URL parameters; browser trace coverage                           | Browser extensions, compromised devices, and upstream platform behaviour are outside this repository.  |
+| Model substitution or dependency compromise                | Immutable package lock, immutable model revision, file sizes/hashes, live manifest verification, reviewed dependency updates | A compromised trusted upstream or build platform remains possible.                                     |
+| Cross-site scripting                                       | User text is assigned with `textContent`; no user-derived HTML; restrictive container CSP                                    | Static Space headers are controlled by the hosting platform.                                           |
+| Worker crash or resource exhaustion                        | Input cap, isolated Worker, load/prediction timeouts, terminate/recreate recovery                                            | First load is large and slow on constrained devices.                                                   |
+| Container privilege or server defaults                     | Multi-stage image, digest-pinned bases, user `101`, unprivileged port, tested headers and health route                       | A reviewed digest can still contain vulnerable software; production operators should scan and rebuild. |
+| Misleading certainty or automated overreach                | Confidence caveat, upstream bias warning, prohibited-use ledger, no action integration, blocked institutional gate           | Users can still ignore visible warnings or copy results elsewhere.                                     |
+| Credential exposure in CI                                  | Immutable action commits, repository-owned deploy script, protected environment, short-lived Space-scoped OIDC credential    | Repository and platform administrators remain trusted.                                                 |
 
 ## Network and privacy nuance
 
@@ -45,7 +45,7 @@ The allowlist is based on a real-model browser trace and must be revisited when 
 
 ## Secrets and reporting
 
-No credential belongs in source, build output, logs, screenshots, or chat. The Hugging Face token must be fine-grained, writable only to the target Space, stored as the `HF_TOKEN` GitHub environment secret, and rotated after suspected exposure.
+No credential belongs in source, build output, logs, screenshots, or chat. The protected deployment job requests a GitHub OIDC identity and exchanges it for a one-hour credential writable only to the target Space. Hugging Face must trust the exact GitHub repository, `main` branch, and `deploy-space.yml` workflow. No long-lived Hugging Face token is stored.
 
 Report vulnerabilities through the private route in [`SECURITY.md`](../SECURITY.md), not a public issue.
 

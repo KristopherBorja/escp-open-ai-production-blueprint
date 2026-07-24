@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 concurrency:
   group: deploy-hugging-face-space
@@ -43,6 +44,5 @@ jobs:
       - name: Mirror the exact verified commit to the public Static Space
         env:
           HF_SPACE_ID: ${{ vars.HF_SPACE_ID }}
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
           VERIFIED_SHA: ${{ github.event.workflow_run.head_sha }}
         run: node scripts/deploy-space.mjs

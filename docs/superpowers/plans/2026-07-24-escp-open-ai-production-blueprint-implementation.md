@@ -2021,40 +2021,40 @@ The workflow pins third-party actions to immutable commits and preserves the rea
 
 - [ ] **Step 2: Add guarded public Space deployment**
 
-Create `.github/workflows/deploy-space.yml`:
+Create `.github/workflows/deploy-space.yml`. The final implementation uses Hugging Face Trusted Publishers instead of a long-lived secret: it starts only after a successful `Verify` run on `main`, checks out that run's exact SHA, and grants only the deployment job `id-token: write`.
 
 ```yaml
-name: Deploy Space
-
 on:
-  workflow_dispatch:
-  push:
+  workflow_run:
+    workflows: [Verify]
+    types: [completed]
     branches: [main]
-
-concurrency:
-  group: deploy-space
-  cancel-in-progress: false
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   deploy:
-    if: github.repository == 'KristopherBorja/escp-open-ai-production-blueprint'
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_repository.full_name == 'KristopherBorja/escp-open-ai-production-blueprint'
     runs-on: ubuntu-latest
     environment: hugging-face
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-      - uses: huggingface/hub-sync@6fbce0a787a7146710e588abe7a4fd5eca07f47c # v0.1.0
         with:
-          github_repo_id: ${{ github.repository }}
-          huggingface_repo_id: KristopherBorja/escp-open-ai-production-blueprint
-          hf_token: ${{ secrets.HF_TOKEN }}
-          repo_type: space
-          space_sdk: static
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - run: node scripts/deploy-space.mjs
+        env:
+          HF_SPACE_ID: ${{ vars.HF_SPACE_ID }}
+          VERIFIED_SHA: ${{ github.event.workflow_run.head_sha }}
 ```
 
-The `HF_TOKEN` must be fine-grained and scoped only to the target Space. Forked pull requests never run this workflow because it only triggers on `main` or manual dispatch.
+`scripts/deploy-space.mjs` exchanges GitHub OIDC for a one-hour credential scoped only to the target Space. No long-lived Hugging Face token is created or stored.
 
 - [ ] **Step 3: Add weekly dependency upkeep**
 
@@ -2168,24 +2168,19 @@ hf repo create KristopherBorja/escp-open-ai-production-blueprint \
 
 Expected: public Space repository exists.
 
-- [ ] **Step 3: Configure the repository-scoped deployment secret**
+- [ ] **Step 3: Configure keyless trusted publishing**
 
-Create a fine-grained Hugging Face write token scoped to this Space and add it without printing the value:
+In the Space settings, add a GitHub Actions Trusted Publisher restricted to:
 
-```bash
-gh secret set HF_TOKEN --repo KristopherBorja/escp-open-ai-production-blueprint
-```
+- repository `KristopherBorja/escp-open-ai-production-blueprint`;
+- branch `main`;
+- workflow `deploy-space.yml`.
 
-Input the token through the hidden prompt. Never place it in shell history, files, tool output, or chat.
+Set the protected GitHub environment variable `HF_SPACE_ID` to the actual `<owner>/escp-open-ai-production-blueprint` identifier. Do not create a long-lived deployment token.
 
-- [ ] **Step 4: Dispatch and watch deployment**
+- [ ] **Step 4: Merge and watch deployment**
 
-```bash
-gh workflow run deploy-space.yml --repo KristopherBorja/escp-open-ai-production-blueprint
-gh run watch --repo KristopherBorja/escp-open-ai-production-blueprint --exit-status
-```
-
-Expected: the sync succeeds and the Space build reaches Running.
+Merge PR #3 after its required `verify` check passes. The protected `main` verification triggers deployment of the exact successful SHA. Watch both workflows and the Space build until they succeed.
 
 - [ ] **Step 5: Verify public URLs and privacy**
 

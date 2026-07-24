@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { createAskPassScript, createDeploymentPlan } from "./deploy-space.mjs";
+import {
+  createAskPassScript,
+  createDeploymentPlan,
+  exchangeHuggingFaceToken,
+} from "./deploy-space.mjs";
 
 const verifiedSha = "a".repeat(40);
 
@@ -10,7 +14,6 @@ describe("createDeploymentPlan", () => {
       actualSha: verifiedSha,
       expectedSha: verifiedSha,
       spaceId: "escp-account/escp-open-ai-production-blueprint",
-      token: "hf_test_secret",
     });
 
     assert.equal(
@@ -23,7 +26,6 @@ describe("createDeploymentPlan", () => {
       plan.remote,
       `${verifiedSha}:main`,
     ]);
-    assert.doesNotMatch(JSON.stringify(plan), /hf_test_secret/u);
   });
 
   it("rejects a commit that did not pass the hosted verification", () => {
@@ -33,7 +35,6 @@ describe("createDeploymentPlan", () => {
           actualSha: "b".repeat(40),
           expectedSha: verifiedSha,
           spaceId: "escp-account/escp-open-ai-production-blueprint",
-          token: "hf_test_secret",
         }),
       /does not match the verified commit/u,
     );
@@ -46,22 +47,61 @@ describe("createDeploymentPlan", () => {
           actualSha: verifiedSha,
           expectedSha: verifiedSha,
           spaceId: "escp-account/another-space",
-          token: "hf_test_secret",
         }),
       /target must end with/u,
     );
   });
+});
 
-  it("requires an environment-scoped token without putting it in the URL", () => {
-    assert.throws(
-      () =>
-        createDeploymentPlan({
-          actualSha: verifiedSha,
-          expectedSha: verifiedSha,
-          spaceId: "escp-account/escp-open-ai-production-blueprint",
-          token: "",
-        }),
-      /HF_TOKEN is required/u,
+describe("exchangeHuggingFaceToken", () => {
+  it("exchanges the GitHub identity for a short-lived Space-scoped token", async () => {
+    const requests = [];
+    const token = await exchangeHuggingFaceToken({
+      fetchImpl: async (url, init = {}) => {
+        requests.push({ url, init });
+        if (requests.length === 1) {
+          return new globalThis.Response(
+            JSON.stringify({ value: "github-identity" }),
+          );
+        }
+        return new globalThis.Response(
+          JSON.stringify({
+            access_token: "hf_short_lived",
+            expires_in: 3600,
+            token_type: "bearer",
+          }),
+        );
+      },
+      idTokenRequestToken: "github-request-token",
+      idTokenRequestUrl: "https://github.test/oidc?job=deploy",
+      spaceId: "escp-account/escp-open-ai-production-blueprint",
+    });
+
+    assert.equal(token, "hf_short_lived");
+    assert.equal(
+      requests[0]?.url,
+      "https://github.test/oidc?job=deploy&audience=https%3A%2F%2Fhuggingface.co",
+    );
+    assert.equal(
+      requests[0]?.init.headers?.Authorization,
+      "bearer github-request-token",
+    );
+    assert.deepEqual(JSON.parse(requests[1]?.init.body), {
+      grant_type: "urn:ietf:params:oauth:grant-type:token-exchange",
+      resource: "spaces/escp-account/escp-open-ai-production-blueprint",
+      subject_token: "github-identity",
+      subject_token_type: "urn:ietf:params:oauth:token-type:id_token",
+    });
+  });
+
+  it("requires GitHub Actions OIDC without accepting a stored token", async () => {
+    await assert.rejects(
+      exchangeHuggingFaceToken({
+        idTokenRequestToken: "",
+        idTokenRequestUrl: "",
+        spaceId: "escp-account/escp-open-ai-production-blueprint",
+      }),
+      /GitHub OIDC is unavailable/u,
     );
   });
 });

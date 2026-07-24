@@ -34,7 +34,7 @@ Target state for release `v0.1.0`: **ready when every item is green**.
 - [x] Container health route and security headers are tested.
 - [x] Critical operating-system and library vulnerabilities block the container gate.
 - [x] CI uses pinned action commits and read-only default permissions.
-- [x] Space deployment consumes only the exact commit from a successful `main` verification and is guarded by environment and repository scope.
+- [x] Space deployment consumes only the exact commit from a successful `main` verification and uses short-lived, Space-scoped OIDC credentials.
 - [x] Architecture, rollback, security, governance, costs, and private reporting are documented.
 
 ## Gate B — real institutional use
