@@ -6,6 +6,7 @@ colorTo: blue
 sdk: static
 app_build_command: npm run build
 app_file: dist/index.html
+license: apache-2.0
 fullWidth: true
 header: mini
 short_description: Open, private-by-design AI production teaching artifact.
@@ -15,7 +16,7 @@ models:
 
 # ESCP Open AI Production Blueprint
 
-[Live Hugging Face Space](https://huggingface.co/spaces/KristopherBorja/escp-open-ai-production-blueprint) · [Public GitHub repository](https://github.com/KristopherBorja/escp-open-ai-production-blueprint)
+[Live Hugging Face Space](https://huggingface.co/spaces/bdboychev/escp-open-ai-production-blueprint) · [Public GitHub repository](https://github.com/KristopherBorja/escp-open-ai-production-blueprint)
 
 A small, public teaching artifact showing how an open model becomes a reviewable production system. The Responsible Feedback Analyser runs a pinned, quantised DistilBERT sentiment model in the student's browser. It also makes privacy, model provenance, containerisation, deployment, governance, cost, and readiness visible.
 

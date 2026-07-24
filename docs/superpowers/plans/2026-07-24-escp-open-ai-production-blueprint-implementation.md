@@ -2155,12 +2155,12 @@ git pull --ff-only
 hf auth whoami
 ```
 
-Expected: authenticated account with permission to create `KristopherBorja/escp-open-ai-production-blueprint`. If the Hugging Face owner differs from the GitHub owner, update only the documented Space owner and workflow target; do not invent credentials.
+Expected: authenticated account with permission to create `bdboychev/escp-open-ai-production-blueprint`. The Hugging Face owner differs from the GitHub owner, so the documented Space owner and workflow target use the real `bdboychev` account; no long-lived credentials are created.
 
 - [ ] **Step 2: Create the public Static Space**
 
 ```bash
-hf repo create KristopherBorja/escp-open-ai-production-blueprint \
+hf repo create bdboychev/escp-open-ai-production-blueprint \
   --repo-type space \
   --space-sdk static \
   --exist-ok
@@ -2176,7 +2176,7 @@ In the Space settings, add a GitHub Actions Trusted Publisher restricted to:
 - branch `main`;
 - workflow `deploy-space.yml`.
 
-Set the protected GitHub environment variable `HF_SPACE_ID` to the actual `<owner>/escp-open-ai-production-blueprint` identifier. Do not create a long-lived deployment token.
+Set the protected GitHub environment variable `HF_SPACE_ID` to `bdboychev/escp-open-ai-production-blueprint`. Do not create a long-lived deployment token.
 
 - [ ] **Step 4: Merge and watch deployment**
 
@@ -2188,7 +2188,7 @@ Open:
 
 ```text
 https://github.com/KristopherBorja/escp-open-ai-production-blueprint
-https://huggingface.co/spaces/KristopherBorja/escp-open-ai-production-blueprint
+https://huggingface.co/spaces/bdboychev/escp-open-ai-production-blueprint
 ```
 
 Repeat the synthetic analysis and confirm:
