@@ -150,6 +150,31 @@ describe("ModelClient", () => {
     expect(secondWorker.sent).toEqual([{ type: "load", backend: "wasm" }]);
   });
 
+  it("retries worker construction when immediate crash recovery is unavailable", () => {
+    const firstWorker = new FakeWorker();
+    const recoveredWorker = new FakeWorker();
+    const createWorker = vi
+      .fn<() => FakeWorker>()
+      .mockReturnValueOnce(firstWorker)
+      .mockImplementationOnce(() => {
+        throw new Error("Module workers are temporarily unavailable.");
+      })
+      .mockReturnValueOnce(recoveredWorker);
+    const client = new ModelClient(createWorker);
+    client.load("wasm");
+    firstWorker.emit({ type: "ready", backend: "wasm" });
+
+    expect(() => firstWorker.emitRuntimeError("Worker crashed.")).not.toThrow();
+    expect(client.status).toEqual({
+      status: "failed",
+      message: "Worker crashed.",
+    });
+
+    client.load("wasm");
+    expect(createWorker).toHaveBeenCalledTimes(3);
+    expect(recoveredWorker.sent).toEqual([{ type: "load", backend: "wasm" }]);
+  });
+
   it("uses a safe fallback and rejects pending work when the worker crashes", async () => {
     const { worker, client } = readyClient();
     const promise = client.predict("Useful workshop.");

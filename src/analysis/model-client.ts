@@ -38,7 +38,7 @@ export class ModelClient implements SentimentEngine {
   readonly #listeners = new Set<(status: ModelStatus) => void>();
   readonly #loadTimeoutMs: number;
   readonly #predictionTimeoutMs: number;
-  #worker: WorkerLike;
+  #worker: WorkerLike | undefined;
   #loadTimeout: ReturnType<typeof setTimeout> | undefined;
   #status: ModelStatus = { status: "idle" };
   #disposed = false;
@@ -52,12 +52,12 @@ export class ModelClient implements SentimentEngine {
     this.#predictionTimeoutMs =
       timeouts.predictionTimeoutMs ?? DEFAULT_PREDICTION_TIMEOUT_MS;
     this.#worker = this.createWorker();
-    this.#bindWorker();
+    this.#bindWorker(this.#worker);
   }
 
-  #bindWorker(): void {
-    this.#worker.onmessage = ({ data }) => this.#handleMessage(data);
-    this.#worker.onerror = ({ message }) => {
+  #bindWorker(worker: WorkerLike): void {
+    worker.onmessage = ({ data }) => this.#handleMessage(data);
+    worker.onerror = ({ message }) => {
       this.#fail(message || "The model worker failed.");
     };
   }
@@ -77,8 +77,18 @@ export class ModelClient implements SentimentEngine {
       return;
     }
 
+    const worker = this.#ensureWorker();
+    if (worker === undefined) {
+      this.#setStatus({
+        status: "failed",
+        message:
+          "The local model worker could not start. Check browser support and retry.",
+      });
+      return;
+    }
+
     this.#setStatus({ status: "loading", file: "model", progress: null });
-    this.#worker.postMessage({ type: "load", backend });
+    worker.postMessage({ type: "load", backend });
     this.#armLoadTimeout();
   }
 
@@ -91,6 +101,13 @@ export class ModelClient implements SentimentEngine {
       return Promise.reject(new Error("The model is not ready."));
     }
 
+    const worker = this.#worker;
+    if (worker === undefined) {
+      return Promise.reject(
+        new Error("The local model worker is unavailable."),
+      );
+    }
+
     const requestId = this.createRequestId();
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
@@ -101,7 +118,7 @@ export class ModelClient implements SentimentEngine {
         }
       }, this.#predictionTimeoutMs);
       this.#pending.set(requestId, { resolve, reject, timeout });
-      this.#worker.postMessage({ type: "predict", requestId, text });
+      worker.postMessage({ type: "predict", requestId, text });
     });
   }
 
@@ -200,13 +217,31 @@ export class ModelClient implements SentimentEngine {
     }
 
     this.#detachAndTerminateWorker();
-    this.#worker = this.createWorker();
-    this.#bindWorker();
+    this.#ensureWorker();
   }
 
   #detachAndTerminateWorker(): void {
-    this.#worker.onmessage = null;
-    this.#worker.onerror = null;
-    this.#worker.terminate();
+    const worker = this.#worker;
+    this.#worker = undefined;
+    if (worker !== undefined) {
+      worker.onmessage = null;
+      worker.onerror = null;
+      worker.terminate();
+    }
+  }
+
+  #ensureWorker(): WorkerLike | undefined {
+    if (this.#worker !== undefined) {
+      return this.#worker;
+    }
+
+    try {
+      const worker = this.createWorker();
+      this.#worker = worker;
+      this.#bindWorker(worker);
+      return worker;
+    } catch {
+      return undefined;
+    }
   }
 }
