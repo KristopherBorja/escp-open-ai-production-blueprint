@@ -17,7 +17,7 @@ class FakeWorker implements WorkerLike {
   }
 
   emitRuntimeError(message: string): void {
-    this.onerror?.(new ErrorEvent("error", { message }));
+    this.onerror?.({ message } as ErrorEvent);
   }
 }
 

@@ -1,0 +1,85 @@
+name: Verify
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out the reviewed commit
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Use the pinned Node.js line
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 24.18.0
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Install the browser test runtime
+        run: npx playwright install --with-deps chromium
+
+      - name: Verify source, tests, build, and model provenance
+        run: npm run verify
+
+      - name: Enforce coverage thresholds
+        run: npm run test:coverage
+
+      - name: Exercise the student experience
+        run: npm run test:browser
+
+      - name: Build and verify the non-root container
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker build --tag escp-open-ai-production-blueprint:ci .
+          docker run --detach \
+            --name escp-blueprint-ci \
+            --publish 127.0.0.1:8080:8080 \
+            escp-open-ai-production-blueprint:ci
+          trap 'docker rm --force escp-blueprint-ci >/dev/null 2>&1 || true' EXIT
+
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:8080/healthz >/dev/null; then
+              break
+            fi
+            if [ "$attempt" -eq 20 ]; then
+              docker logs escp-blueprint-ci
+              exit 1
+            fi
+            sleep 1
+          done
+
+          CONTAINER_URL=http://127.0.0.1:8080 npm run verify:container
+          test "$(docker inspect --format '{{.Config.User}}' escp-blueprint-ci)" = "101"
+
+      - name: Reject critical container vulnerabilities
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: escp-open-ai-production-blueprint:ci
+          format: table
+          exit-code: "1"
+          ignore-unfixed: "false"
+          vuln-type: os,library
+          severity: CRITICAL
+          version: v0.70.0

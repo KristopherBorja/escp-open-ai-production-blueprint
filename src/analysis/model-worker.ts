@@ -4,6 +4,7 @@ import { env, pipeline, type ProgressInfo } from "@huggingface/transformers";
 import manifest from "../../model-manifest.json";
 import type { AnalysisBackend } from "./contracts";
 import { normalizeSentimentLabel } from "./model-output";
+import { configureLocalOnnxRuntime } from "./runtime-assets";
 import type { WorkerRequest, WorkerResponse } from "./worker-contracts";
 
 type Classifier = Awaited<ReturnType<typeof pipeline<"sentiment-analysis">>>;
@@ -13,6 +14,7 @@ let activeBackend: AnalysisBackend = "wasm";
 
 env.allowLocalModels = false;
 env.useBrowserCache = true;
+configureLocalOnnxRuntime(env);
 // Transformers.js 4.2 performs registry metadata probes before forwarding the
 // pipeline revision. Pin the worker-wide remote path so those probes cannot
 // observe a moving branch either.
