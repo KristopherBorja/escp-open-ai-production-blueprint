@@ -44,7 +44,7 @@ The application must never silently fall back to another model or moving branch.
 ## Change and review process
 
 - Changes arrive through reviewable pull requests.
-- CI checks format, lint, types, tests, evaluation cases, build, browser behaviour, accessibility, model manifest, container behaviour, headers, and non-root execution.
+- CI checks format, lint, types, tests, evaluation cases, build, browser behaviour, accessibility, model manifest, container behaviour, headers, non-root execution, and critical container vulnerabilities.
 - Direct dependencies, GitHub Actions, and container bases receive weekly update proposals.
 - Third-party workflow actions use immutable commit references.
 - Security fixes follow the private reporting route and produce a tagged release.

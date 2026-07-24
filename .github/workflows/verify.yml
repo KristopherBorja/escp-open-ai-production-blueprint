@@ -71,3 +71,15 @@ jobs:
 
           CONTAINER_URL=http://127.0.0.1:8080 npm run verify:container
           test "$(docker inspect --format '{{.Config.User}}' escp-blueprint-ci)" = "101"
+
+      - name: Reject critical container vulnerabilities
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: escp-open-ai-production-blueprint:ci
+          format: table
+          exit-code: "1"
+          ignore-unfixed: "false"
+          vuln-type: os,library
+          severity: CRITICAL
+          version: v0.70.0

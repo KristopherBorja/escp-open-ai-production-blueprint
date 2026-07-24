@@ -1,8 +1,11 @@
 name: Deploy Hugging Face Space
 
 on:
-  workflow_dispatch:
-  push:
+  workflow_run:
+    workflows:
+      - Verify
+    types:
+      - completed
     branches:
       - main
 
@@ -16,7 +19,11 @@ concurrency:
 jobs:
   deploy:
     name: deploy-space
-    if: github.repository == 'KristopherBorja/escp-open-ai-production-blueprint'
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_repository.full_name == 'KristopherBorja/escp-open-ai-production-blueprint'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: hugging-face
@@ -24,13 +31,18 @@ jobs:
     steps:
       - name: Check out the verified commit
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-
-      - name: Mirror the repository to the public Static Space
-        uses: huggingface/hub-sync@6fbce0a787a7146710e588abe7a4fd5eca07f47c # v0.1.0
         with:
-          github_repo_id: KristopherBorja/escp-open-ai-production-blueprint
-          huggingface_repo_id: KristopherBorja/escp-open-ai-production-blueprint
-          hf_token: ${{ secrets.HF_TOKEN }}
-          repo_type: space
-          space_sdk: static
-          private: "false"
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+
+      - name: Use the pinned Node.js line
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 24.18.0
+
+      - name: Mirror the exact verified commit to the public Static Space
+        env:
+          HF_SPACE_ID: ${{ vars.HF_SPACE_ID }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          VERIFIED_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: node scripts/deploy-space.mjs
