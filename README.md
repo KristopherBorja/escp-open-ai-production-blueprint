@@ -4,7 +4,6 @@ emoji: 🧭
 colorFrom: green
 colorTo: blue
 sdk: static
-app_build_command: npm run build
 app_file: dist/index.html
 license: apache-2.0
 fullWidth: true
@@ -114,8 +113,8 @@ Important limitations:
 
 ## Contributing
 
-Changes should be small, reviewed pull requests with green verification. Model or dependency changes must update provenance, evaluation evidence, limitations, cost assumptions, and the relevant documentation together.
+Changes should be small, reviewed pull requests with green verification. The prebuilt `dist/` release artifact must be regenerated with `npm run build` and committed with its source change; CI rejects stale output. Model or dependency changes must update provenance, evaluation evidence, limitations, cost assumptions, and the relevant documentation together.
 
 ## Licence
 
-Code and documentation are licensed under [Apache-2.0](LICENSE). Model files are downloaded from Hugging Face and remain subject to their upstream licences and terms.
+Original code and documentation are licensed under [Apache-2.0](LICENSE). The generated browser artifact retains the licences of its bundled runtime components; see [third-party notices](THIRD_PARTY_NOTICES.md). Model files are downloaded from Hugging Face and remain subject to their upstream licences and terms.

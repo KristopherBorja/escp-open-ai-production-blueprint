@@ -35,6 +35,7 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
+          lfs: true
           persist-credentials: false
 
       - name: Use the pinned Node.js line

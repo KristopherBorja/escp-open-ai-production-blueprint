@@ -63,7 +63,7 @@ The Dockerfile separates build and runtime stages. Node and development dependen
 
 ## Deployment and rollback
 
-The deployment workflow listens for a successful `Verify` run caused by a push to `main`, checks out that run's exact commit, and syncs only that SHA to one public Static Space. GitHub OIDC is exchanged for a one-hour, Space-scoped Hugging Face credential; no long-lived deployment secret is stored. A repository-owned script performs the Git push without putting the temporary credential in the remote URL. A rollback is:
+The reviewed `dist/` directory is the Static Space release artifact. GitHub CI rebuilds it from source and rejects tracked changes or untracked output before release, so Hugging Face can serve the verified files directly without a paid build job. The large ONNX WASM runtime is stored with Git LFS and fetched by the deployment checkout. The deployment workflow listens for a successful `Verify` run caused by a push to `main`, checks out that run's exact commit with complete history, and syncs only that SHA to one public Static Space. GitHub OIDC is exchanged for a one-hour, Space-scoped Hugging Face credential; no long-lived deployment secret is stored. A repository-owned script performs the Git push without putting the temporary credential in the remote URL. A rollback is:
 
 1. identify the last known-good tagged commit;
 2. revert the faulty change through a reviewed pull request;

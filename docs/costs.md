@@ -8,7 +8,7 @@ These are transparent teaching estimates, not quotations. Tax, regional variatio
 
 | Item                      | Monthly platform estimate | Assumption                                                             |
 | ------------------------- | ------------------------: | ---------------------------------------------------------------------- |
-| Hugging Face Static Space |                        $0 | Static Spaces are served without a compute runtime.                    |
+| Hugging Face Static Space |                        $0 | Serves the prebuilt artifact without a compute runtime or build job.   |
 | Public GitHub repository  |                        $0 | Public source repository.                                              |
 | Standard GitHub-hosted CI |                        $0 | Standard runners for a public repository; larger runners are excluded. |
 | Server inference          |                        $0 | Inference runs on each student's device.                               |
@@ -16,6 +16,8 @@ These are transparent teaching estimates, not quotations. Tax, regional variatio
 | **Baseline total**        |              **$0/month** | Platform baseline only.                                                |
 
 The baseline excludes labour, teaching preparation, institutional support, legal and accessibility review, procurement, custom domains, monitoring, incident response, backups, service management, electricity, and student devices. It is not a total cost of ownership.
+
+The application is built and verified by standard public-repository GitHub Actions, then the reviewed `dist/` artifact is served directly by Hugging Face. This avoids the account credits required by Hugging Face's hosted static build job while retaining the free static-delivery route.
 
 ## Always-on server comparisons
 

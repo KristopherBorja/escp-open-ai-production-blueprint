@@ -457,14 +457,16 @@ Pull requests run:
 
 ### Space deployment
 
-After main is protected and verified, the official `huggingface/hub-sync` GitHub Action mirrors the repository to a public Static Space using:
+After main is protected and verified, a repository-owned GitHub Action mirrors the exact verified commit to a public Static Space using:
 
 - `space_sdk: static`
-- A fine-grained Hugging Face token scoped only to the target Space, stored as `HF_TOKEN`, or a documented migration to Hugging Face Trusted Publishers when configured.
-- `app_build_command: npm run build`
+- Hugging Face Trusted Publishers restricted to the exact GitHub repository, `main` branch, and deployment workflow.
+- A short-lived OIDC credential scoped only to the target Space; no stored Hugging Face token.
 - `app_file: dist/index.html`
+- A reviewed `dist/` artifact that public-repository CI rebuilds and verifies before merge, avoiding an account-funded Hugging Face build job.
+- Git LFS for generated runtime assets larger than the Hugging Face Git blob limit.
 
-The workflow must never expose the token to pull requests from forks.
+The workflow must never grant a publishing identity to pull requests from forks.
 
 ### Rollback
 

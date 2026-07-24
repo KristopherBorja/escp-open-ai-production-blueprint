@@ -29,7 +29,9 @@ Target state for release `v0.1.0`: **ready when every item is green**.
 ### Delivery and operations
 
 - [x] Public source repository and reviewed pull-request history exist.
-- [x] Static Space metadata builds `dist/index.html`.
+- [x] Static Space metadata serves the reviewed `dist/index.html` without a paid build job.
+- [x] CI rebuilds `dist/` and rejects stale or missing release assets.
+- [x] The large ONNX WASM runtime is tracked and deployed with Git LFS.
 - [x] Reproducible multi-stage container runs as non-root user `101`.
 - [x] Container health route and security headers are tested.
 - [x] Critical operating-system and library vulnerabilities block the container gate.
