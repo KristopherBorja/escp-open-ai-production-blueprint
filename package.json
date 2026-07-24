@@ -14,9 +14,11 @@
     "lint": "eslint . --max-warnings 0",
     "format:check": "prettier --check .",
     "test": "vitest run",
+    "test:scripts": "node --test scripts/*.test.mjs",
     "test:coverage": "vitest run --coverage",
     "test:browser": "playwright test",
-    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build"
+    "verify:model": "node scripts/verify-model-manifest.mjs",
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run test:scripts && npm run build && npm run verify:model"
   },
   "dependencies": {
     "@huggingface/transformers": "4.2.0"
