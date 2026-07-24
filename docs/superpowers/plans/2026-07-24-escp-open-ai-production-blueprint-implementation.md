@@ -1764,8 +1764,8 @@ emoji: 🧭
 colorFrom: green
 colorTo: blue
 sdk: static
-app_build_command: npm run build
 app_file: dist/index.html
+license: apache-2.0
 fullWidth: true
 header: mini
 short_description: Open, private-by-design AI production teaching artifact.

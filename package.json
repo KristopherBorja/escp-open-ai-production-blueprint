@@ -19,7 +19,8 @@
     "test:browser": "playwright test",
     "verify:container": "node scripts/verify-container.mjs",
     "verify:model": "node scripts/verify-model-manifest.mjs",
-    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run test:scripts && npm run build && npm run verify:model"
+    "verify:space": "node scripts/verify-static-space-artifact.mjs",
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run test:scripts && npm run build && npm run verify:space && npm run verify:model"
   },
   "dependencies": {
     "@huggingface/transformers": "4.2.0",
