@@ -1,0 +1,36 @@
+name: Deploy Hugging Face Space
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-hugging-face-space
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: deploy-space
+    if: github.repository == 'KristopherBorja/escp-open-ai-production-blueprint'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: hugging-face
+
+    steps:
+      - name: Check out the verified commit
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Mirror the repository to the public Static Space
+        uses: huggingface/hub-sync@6fbce0a787a7146710e588abe7a4fd5eca07f47c # v0.1.0
+        with:
+          github_repo_id: KristopherBorja/escp-open-ai-production-blueprint
+          huggingface_repo_id: KristopherBorja/escp-open-ai-production-blueprint
+          hf_token: ${{ secrets.HF_TOKEN }}
+          repo_type: space
+          space_sdk: static
+          private: "false"
