@@ -36,6 +36,8 @@
   "limitations": [
     "Trained on SST-2 movie reviews, not educational feedback.",
     "Binary sentiment loses mixed and neutral nuance.",
-    "Confidence is not calibrated certainty."
+    "Confidence is not calibrated certainty.",
+    "The upstream model card documents bias risks, including sensitivity to identity and country terms.",
+    "Results are demonstrations and must not be used to evaluate people."
   ]
 }

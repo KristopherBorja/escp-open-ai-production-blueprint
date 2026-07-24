@@ -611,6 +611,17 @@ textarea[aria-invalid="true"] {
   font-size: 0.82rem;
 }
 
+.limitation-list {
+  margin: 0.75rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--on-dark-muted);
+  font-size: 0.82rem;
+}
+
+.limitation-list li + li {
+  margin-top: 0.35rem;
+}
+
 .pii-alert h3 {
   max-width: 15ch;
   margin-bottom: 1rem;
@@ -1029,6 +1040,43 @@ textarea[aria-invalid="true"] {
   margin: 1rem 0 0;
   color: var(--muted);
   font-size: 0.75rem;
+}
+
+.cost-exclusions {
+  margin: 1rem 0 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.unsupported-shell {
+  width: min(42rem, calc(100% - 2rem));
+  margin: clamp(3rem, 12vh, 8rem) auto;
+  padding: clamp(1.5rem, 5vw, 3.5rem);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  box-shadow: 0 1.5rem 4rem rgb(16 38 27 / 12%);
+}
+
+.unsupported-shell h1 {
+  max-width: 14ch;
+  margin: 0.7rem 0 1rem;
+  font-family: var(--serif);
+  font-size: clamp(2.25rem, 7vw, 4.5rem);
+  font-weight: 500;
+  line-height: 0.96;
+}
+
+.unsupported-shell > p:not(.eyebrow) {
+  max-width: 58ch;
+  margin: 0 0 1.5rem;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+.unsupported-shell .button--secondary {
+  border-color: var(--green);
+  color: var(--green);
 }
 
 .readiness-gates {

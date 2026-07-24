@@ -52,4 +52,15 @@ describe("redactPii", () => {
     const text = "Email 1234567@example.com.";
     expect(redactPii(text, inspectPii(text))).toBe("Email [email redacted].");
   });
+
+  it("uses a compact marker when redaction would exceed the input limit", () => {
+    const text = `${"x".repeat(493)} a@b.co`;
+    expect(text).toHaveLength(500);
+
+    const redacted = redactPii(text, inspectPii(text));
+
+    expect(redacted).toHaveLength(499);
+    expect(redacted).toMatch(/\[PII\]$/u);
+    expect(inspectPii(redacted)).toEqual([]);
+  });
 });

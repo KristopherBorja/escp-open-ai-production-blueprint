@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ModelClient, type ModelStatus, type WorkerLike } from "./model-client";
 import type { WorkerRequest, WorkerResponse } from "./worker-contracts";
 
@@ -43,16 +43,23 @@ function readyClient(): {
   readonly client: ModelClient;
 } {
   const worker = new FakeWorker();
-  const client = new ModelClient(worker, () => "request-1");
+  const client = new ModelClient(
+    () => worker,
+    () => "request-1",
+  );
   client.load("wasm");
   worker.emit({ type: "ready", backend: "wasm" });
   return { worker, client };
 }
 
 describe("ModelClient", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("publishes loading progress and readiness", () => {
     const worker = new FakeWorker();
-    const client = new ModelClient(worker);
+    const client = new ModelClient(() => worker);
     const statuses: ModelStatus[] = [];
     client.subscribe((status) => statuses.push(status));
 
@@ -80,7 +87,7 @@ describe("ModelClient", () => {
 
   it("rejects prediction before the model is ready", async () => {
     const worker = new FakeWorker();
-    const client = new ModelClient(worker);
+    const client = new ModelClient(() => worker);
 
     await expect(client.predict("Useful workshop.")).rejects.toThrow(
       "The model is not ready.",
@@ -115,25 +122,32 @@ describe("ModelClient", () => {
     await expect(promise).rejects.toThrow("Inference failed.");
   });
 
-  it("publishes load and runtime failures so the UI can retry", () => {
-    const worker = new FakeWorker();
-    const client = new ModelClient(worker);
+  it("recreates a crashed worker before the UI retries", async () => {
+    const firstWorker = new FakeWorker();
+    const secondWorker = new FakeWorker();
+    const createWorker = vi
+      .fn<() => FakeWorker>()
+      .mockReturnValueOnce(firstWorker)
+      .mockReturnValueOnce(secondWorker);
+    const client = new ModelClient(createWorker, () => "request-1");
     const statuses: ModelStatus[] = [];
     client.subscribe((status) => statuses.push(status));
 
     client.load("wasm");
-    worker.emit({ type: "error", message: "Download failed." });
-    client.load("wasm");
-    worker.emitRuntimeError("Worker crashed.");
+    firstWorker.emit({ type: "ready", backend: "wasm" });
+    const predictionPromise = client.predict("Useful workshop.");
+    firstWorker.emitRuntimeError("Worker crashed.");
 
+    await expect(predictionPromise).rejects.toThrow("Worker crashed.");
     expect(statuses.at(-1)).toEqual({
       status: "failed",
       message: "Worker crashed.",
     });
-    expect(worker.sent).toEqual([
-      { type: "load", backend: "wasm" },
-      { type: "load", backend: "wasm" },
-    ]);
+    expect(firstWorker.terminate).toHaveBeenCalledOnce();
+    expect(createWorker).toHaveBeenCalledTimes(2);
+
+    client.load("wasm");
+    expect(secondWorker.sent).toEqual([{ type: "load", backend: "wasm" }]);
   });
 
   it("uses a safe fallback and rejects pending work when the worker crashes", async () => {
@@ -151,7 +165,7 @@ describe("ModelClient", () => {
 
   it("stops publishing to an unsubscribed status listener", () => {
     const worker = new FakeWorker();
-    const client = new ModelClient(worker);
+    const client = new ModelClient(() => worker);
     const listener = vi.fn();
     const unsubscribe = client.subscribe(listener);
 
@@ -173,7 +187,7 @@ describe("ModelClient", () => {
 
   it("makes disposal idempotent and rejects later operations", async () => {
     const worker = new FakeWorker();
-    const client = new ModelClient(worker);
+    const client = new ModelClient(() => worker);
     client.dispose();
     client.dispose();
     client.load("wasm");
@@ -197,5 +211,60 @@ describe("ModelClient", () => {
       });
     }).not.toThrow();
     expect(client.status).toEqual({ status: "ready", backend: "wasm" });
+  });
+
+  it("terminates and recreates a worker when model loading hangs", async () => {
+    vi.useFakeTimers();
+    const firstWorker = new FakeWorker();
+    const secondWorker = new FakeWorker();
+    const createWorker = vi
+      .fn<() => FakeWorker>()
+      .mockReturnValueOnce(firstWorker)
+      .mockReturnValueOnce(secondWorker);
+    const client = new ModelClient(createWorker, undefined, {
+      loadTimeoutMs: 1_000,
+    });
+
+    client.load("wasm");
+    await vi.advanceTimersByTimeAsync(1_000);
+
+    expect(client.status).toEqual({
+      status: "failed",
+      message: "The model download timed out. Check the network and retry.",
+    });
+    expect(firstWorker.terminate).toHaveBeenCalledOnce();
+
+    client.load("wasm");
+    expect(secondWorker.sent).toEqual([{ type: "load", backend: "wasm" }]);
+  });
+
+  it("rejects pending work and recreates the worker when inference hangs", async () => {
+    vi.useFakeTimers();
+    const firstWorker = new FakeWorker();
+    const secondWorker = new FakeWorker();
+    const createWorker = vi
+      .fn<() => FakeWorker>()
+      .mockReturnValueOnce(firstWorker)
+      .mockReturnValueOnce(secondWorker);
+    const client = new ModelClient(createWorker, () => "request-1", {
+      predictionTimeoutMs: 1_000,
+    });
+    client.load("wasm");
+    firstWorker.emit({ type: "ready", backend: "wasm" });
+
+    const predictionPromise = client.predict("Useful workshop.");
+    const rejection = expect(predictionPromise).rejects.toThrow(
+      "Local model analysis timed out. Retry with a fresh worker.",
+    );
+    await vi.advanceTimersByTimeAsync(1_000);
+
+    await rejection;
+    expect(firstWorker.terminate).toHaveBeenCalledOnce();
+    expect(client.status).toEqual({
+      status: "failed",
+      message: "Local model analysis timed out. Retry with a fresh worker.",
+    });
+    client.load("wasm");
+    expect(secondWorker.sent).toEqual([{ type: "load", backend: "wasm" }]);
   });
 });

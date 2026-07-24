@@ -22,9 +22,30 @@ describe("blueprintContent", () => {
     expect(blueprintContent.costs.sources).toHaveLength(2);
   });
 
+  it("keeps labour and institutional production work outside the zero baseline", () => {
+    expect(blueprintContent.costs.exclusions).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/labour/iu),
+        expect.stringMatching(/institutional support/iu),
+        expect.stringMatching(/legal and accessibility review/iu),
+        expect.stringMatching(/custom domains/iu),
+        expect.stringMatching(/monitoring/iu),
+      ]),
+    );
+  });
+
   it("keeps real institutional use blocked", () => {
     expect(blueprintContent.readiness.institutional.status).toBe("blocked");
     expect(blueprintContent.readiness.demo.status).toBe("ready-when-green");
+  });
+
+  it("discloses the network metadata exposed by model downloads", () => {
+    expect(blueprintContent.governance.privacyDisclosure).toMatch(
+      /contacts Hugging Face/u,
+    );
+    expect(blueprintContent.governance.privacyDisclosure).toMatch(
+      /IP address/u,
+    );
   });
 
   it("names every browser analysis stage in order", () => {

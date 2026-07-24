@@ -57,6 +57,8 @@ export const blueprintContent = {
       "Teach open-model inference, privacy, deployment, cost, and human oversight with synthetic feedback.",
     prohibitedUse:
       "No grading, profiling, disciplinary action, staff evaluation, admissions, or automated routing.",
+    privacyDisclosure:
+      "Inference stays on this device and your text is not sent to an application server. The browser contacts Hugging Face to download model files, which exposes normal network metadata such as your IP address.",
     controls: [
       "Local processing with no application server, storage, analytics, or telemetry.",
       "A 500-character input limit and a common-PII stop before inference.",
@@ -75,6 +77,13 @@ export const blueprintContent = {
     currency: "USD",
     assumptions:
       "730 hours represents an always-on 30.4-day month. Paid references add a $9 PRO subscription; actual billing is usage-based and may differ.",
+    exclusions: [
+      "Labour",
+      "Institutional support",
+      "Legal and accessibility review",
+      "Custom domains",
+      "Monitoring and incident response",
+    ],
     options: [
       {
         id: "static-demo",

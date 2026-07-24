@@ -26,6 +26,9 @@ test("orients students around the local open-model experience", async ({
   ).toBeVisible();
   await expect(page.getByText("Model ready", { exact: true })).toBeVisible();
   await expect(
+    page.getByText(/browser contacts Hugging Face.*IP address/iu),
+  ).toBeVisible();
+  await expect(
     page.getByRole("button", { name: "Analyse feedback" }),
   ).toBeDisabled();
 });
@@ -45,6 +48,17 @@ test("analyses synthetic feedback and exposes provenance", async ({ page }) => {
   await expect(page.getByText("fixture-revision")).toBeVisible();
   await expect(page.getByText("76% confidence")).toBeVisible();
   await expect(page.getByText("WASM · q8")).toBeVisible();
+  await expect(page.getByText("Apache-2.0")).toBeVisible();
+  await expect(
+    page.getByText(/Confidence is not calibrated certainty/iu),
+  ).toBeVisible();
+  await expect(page.getByText(/identity and country terms/iu)).toBeVisible();
+
+  const analysisStatus = page.getByRole("status", {
+    name: "Analysis result",
+  });
+  await expect(analysisStatus).toHaveAttribute("aria-live", "polite");
+  await expect(analysisStatus).toContainText("Analysis result");
 });
 
 test("blocks and locally redacts common PII before inference", async ({
@@ -111,12 +125,29 @@ test("navigates governance, costs, and readiness with semantic tabs", async ({
   await expect(
     page.getByRole("cell", { name: "$0", exact: true }),
   ).toBeVisible();
+  await expect(page.getByText(/Excludes labour/iu)).toBeVisible();
 
   await page.getByRole("tab", { name: "Readiness" }).click();
   await expect(page.getByText("Blocked", { exact: true })).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Institutional use" }),
   ).toBeVisible();
+});
+
+test("explains the minimum capabilities in unsupported browsers", async ({
+  page,
+}) => {
+  await page.goto("/unsupported.html");
+
+  await expect(
+    page.getByRole("heading", {
+      name: "This browser cannot run the local model",
+    }),
+  ).toBeVisible();
+  await expect(page.getByText(/Web Workers and WebAssembly/iu)).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Read the deployment architecture" }),
+  ).toHaveAttribute("href", /docs\/architecture\.md$/u);
 });
 
 test("has no automatically detectable accessibility violations", async ({

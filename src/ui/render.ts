@@ -3,6 +3,7 @@ import type { ModelStatus } from "../analysis/model-client";
 import type { PiiFinding } from "../analysis/pii-guard";
 import { MAX_FEEDBACK_LENGTH } from "../analysis/input-policy";
 import { blueprintContent } from "../content/blueprint-content";
+import manifest from "../../model-manifest.json";
 import {
   canAnalyse,
   formatConfidence,
@@ -252,7 +253,15 @@ function buildCostsPanel(): HTMLElement {
     note.append(externalLink(source.label, source.url));
   }
 
-  panel.append(intro, tableWrap, note);
+  const exclusions = element(
+    "p",
+    "cost-exclusions",
+    `Excludes ${blueprintContent.costs.exclusions
+      .map((item) => item.toLocaleLowerCase())
+      .join(", ")}.`,
+  );
+
+  panel.append(intro, tableWrap, exclusions, note);
   return panel;
 }
 
@@ -338,6 +347,11 @@ function renderCompleteResult(
       sentiment.provenance.modelId,
       `Revision ${sentiment.provenance.revision}`,
     ),
+    definition(
+      "Model licence",
+      "Apache-2.0",
+      `Upstream: ${manifest.upstreamModelId}`,
+    ),
   );
 
   const limitationBox = element("aside", "limitation");
@@ -345,6 +359,11 @@ function renderCompleteResult(
     element("strong", undefined, "Interpret with care"),
     element("p", undefined, limitation),
   );
+  const limitations = element("ul", "limitation-list");
+  for (const item of manifest.limitations) {
+    limitations.append(element("li", undefined, item));
+  }
+  limitationBox.append(limitations);
 
   container.append(headline, metrics, limitationBox);
 }
@@ -508,13 +527,16 @@ export function createAppView(
   const privacyNote = element(
     "p",
     "privacy-note",
-    "Nothing you type is sent to an application server.",
+    blueprintContent.governance.privacyDisclosure,
   );
   actionRow.append(analyse, privacyNote);
   workspace.append(sampleLabel, samples, field, actionRow);
 
   const resultPanel = element("section", "result-panel");
   resultPanel.setAttribute("aria-labelledby", "result-heading");
+  resultPanel.setAttribute("role", "status");
+  resultPanel.setAttribute("aria-live", "polite");
+  resultPanel.setAttribute("aria-atomic", "true");
   resultPanel.append(element("p", "step-label", "02 / Result"));
   const resultHeading = element("h2", undefined, "What the result will show");
   resultHeading.id = "result-heading";
