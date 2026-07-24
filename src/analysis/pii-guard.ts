@@ -1,3 +1,5 @@
+import { MAX_FEEDBACK_LENGTH } from "./input-policy";
+
 export type PiiKind = "email" | "phone";
 
 export interface PiiFinding {
@@ -69,11 +71,26 @@ export function redactPii(
   text: string,
   findings: readonly PiiFinding[],
 ): string {
-  return [...withoutOverlaps(findings)]
+  const accepted = [...withoutOverlaps(findings)];
+  let remainingLength = MAX_FEEDBACK_LENGTH - text.length;
+  const markers = new Map<PiiFinding, string>();
+  for (const finding of accepted) {
+    const sourceLength = finding.end - finding.start;
+    const descriptiveMarker = `[${finding.kind} redacted]`;
+    const expansion = descriptiveMarker.length - sourceLength;
+    if (expansion <= remainingLength) {
+      markers.set(finding, descriptiveMarker);
+      remainingLength -= expansion;
+    } else {
+      markers.set(finding, "[PII]");
+    }
+  }
+
+  return accepted
     .sort((left, right) => right.start - left.start)
-    .reduce(
-      (redacted, finding) =>
-        `${redacted.slice(0, finding.start)}[${finding.kind} redacted]${redacted.slice(finding.end)}`,
-      text,
-    );
+    .reduce((redacted, finding) => {
+      const descriptiveMarker = `[${finding.kind} redacted]`;
+      const marker = markers.get(finding) ?? descriptiveMarker;
+      return `${redacted.slice(0, finding.start)}${marker}${redacted.slice(finding.end)}`;
+    }, text);
 }

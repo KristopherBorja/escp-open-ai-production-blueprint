@@ -25,6 +25,14 @@ describe("inspectPii", () => {
       },
     ]);
   });
+
+  it("keeps multiple findings of the same kind in source order", () => {
+    expect(
+      inspectPii("First ada@example.com, then grace@example.org.").map(
+        (finding) => finding.value,
+      ),
+    ).toEqual(["ada@example.com", "grace@example.org"]);
+  });
 });
 
 describe("redactPii", () => {
@@ -43,5 +51,16 @@ describe("redactPii", () => {
   it("redacts a numeric email once without corrupting surrounding text", () => {
     const text = "Email 1234567@example.com.";
     expect(redactPii(text, inspectPii(text))).toBe("Email [email redacted].");
+  });
+
+  it("uses a compact marker when redaction would exceed the input limit", () => {
+    const text = `${"x".repeat(493)} a@b.co`;
+    expect(text).toHaveLength(500);
+
+    const redacted = redactPii(text, inspectPii(text));
+
+    expect(redacted).toHaveLength(499);
+    expect(redacted).toMatch(/\[PII\]$/u);
+    expect(inspectPii(redacted)).toEqual([]);
   });
 });

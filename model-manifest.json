@@ -1,0 +1,43 @@
+{
+  "modelId": "Xenova/distilbert-base-uncased-finetuned-sst-2-english",
+  "upstreamModelId": "distilbert/distilbert-base-uncased-finetuned-sst-2-english",
+  "revision": "0b6928efcb76139cae2c6881d49cda67fe119f42",
+  "task": "sentiment-analysis",
+  "license": "apache-2.0",
+  "defaultBackend": "wasm",
+  "defaultDtype": "q8",
+  "files": [
+    {
+      "path": "config.json",
+      "bytes": 735,
+      "sha256": "b0e9ec981125ef799f31847b1410053069e7708078bb2236ae05239efdd4d428"
+    },
+    {
+      "path": "tokenizer.json",
+      "bytes": 711396,
+      "sha256": "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66"
+    },
+    {
+      "path": "tokenizer_config.json",
+      "bytes": 372,
+      "sha256": "2bbf2ea55c232406706144b907ca020cd7528a78e3e4741115be3b3566542b0b"
+    },
+    {
+      "path": "vocab.txt",
+      "bytes": 231508,
+      "sha256": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3"
+    },
+    {
+      "path": "onnx/model_quantized.onnx",
+      "bytes": 67581197,
+      "sha256": "79b45c7fd8c2673aa53615aba07caeb2de798f63a95a2393a365982429c94f7f"
+    }
+  ],
+  "limitations": [
+    "Trained on SST-2 movie reviews, not educational feedback.",
+    "Binary sentiment loses mixed and neutral nuance.",
+    "Confidence is not calibrated certainty.",
+    "The upstream model card documents bias risks, including sensitivity to identity and country terms.",
+    "Results are demonstrations and must not be used to evaluate people."
+  ]
+}
